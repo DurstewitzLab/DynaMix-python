@@ -53,21 +53,6 @@ $$z_{t+1} = \sum_{j=1}^J w_{j,t}^{exp} z_t^i$$
 Model implementations:
 - DynaMix → [`src/model/dynamix.py`](src/model/dynamix.py), individual specifications for the architecture can be modified in the [`settings`](src/training/settings/defaults.json) file.
 
-## Model Hyperparameters
-
-DynaMix has several hyperparameters that control its behavior:
-
-### Core Architecture Parameters
-
-- **M**: Latent state dimension - the internal representation size used by each expert
-- **N**: Observation space dimension - corresponds to the maximum input data dimensionality
-- **Experts**: Number of expert networks in the mixture
-- **expert_type**: Type of expert network to use:
-  - "almost_linear_rnn" - simpler model with direct linear and nonlinear components (default, hyperparameter `P` controls number of ReLU units) → [ALRNN paper](https://arxiv.org/abs/2410.14240)
-  - "clipped_shallow_plrnn" - more complex model with additional hidden layer (default, hyperparameter `hidden_dim` controls hidden layer dimension) → [shallow PLRNN paper](https://arxiv.org/abs/2306.04406)
-- **probabilistic_expert**: Whether experts should produce probabilisitic outputs under Gaussian assumption (default: `False`)
-
-
 ## Evaluating DynaMix
 
 ### Zero-Shot Forecasting
