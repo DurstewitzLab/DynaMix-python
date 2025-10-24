@@ -21,7 +21,7 @@ DynaMix serves as a foundation model for dynamical systems. By training on a div
 ![DynaMix Introduction](figures/Intro.png)
 
 ## DynaMix Demo
-Try DynaMix instantly through our interactive Huggingface Space at [https://durstewitzlab-dynamix.hf.space/](https://durstewitzlab-dynamix.hf.space/). This demo lets you test the model's capabilities without installing any code or dependencies. Simply upload your time series data in the required format and generate long-term forecasts with zero-shot inference.
+Try DynaMix instantly through our interactive Huggingface Space at [https://huggingface.co/spaces/DurstewitzLab/DynaMix](https://huggingface.co/spaces/DurstewitzLab/DynaMix). This demo lets you test the model's capabilities without installing any code or dependencies. Simply upload your time series data in the required format and generate long-term forecasts with zero-shot inference.
 
 ## Code Setup and Usage
 The project is implemented in Python using PyTorch.
