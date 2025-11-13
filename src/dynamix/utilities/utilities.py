@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from safetensors.torch import save_file, load_file
 from huggingface_hub import hf_hub_download
-from src.model.dynamix import DynaMix
+from ..model.dynamix import DynaMix
 
 def create_checkpoint_directories(save_path, args=None):
     """

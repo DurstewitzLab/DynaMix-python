@@ -27,11 +27,12 @@ Try DynaMix instantly through our interactive Huggingface Space at [https://hugg
 The project is implemented in Python using PyTorch.
 
 ### Installation
-Clone the repository and install the required packages:
+Clone the repository and install the package with dependencies:
 
 ```bash
-cd zero-shot-DSR-python
-pip install -r requirements.txt
+git clone https://github.com/DurstewitzLab/DynaMix-python
+cd DynaMix-python
+pip install -e .
 ```
 
 ## DynaMix Model Architecture
@@ -51,7 +52,7 @@ $$z_{t+1} = \sum_{j=1}^J w_{j,t}^{exp} z_t^i$$
 ![DynaMix Architecture](figures/architecture.png)
 
 Model implementations:
-- DynaMix → [`src/model/dynamix.py`](src/model/dynamix.py), individual specifications for the architecture can be modified in the [`settings`](src/training/settings/defaults.json) file.
+- DynaMix → [`model/dynamix.py`](src/dynamix/model/dynamix.py), individual specifications for the architecture can be modified in the [`settings`](src/dynamix/training/settings/defaults.json) file.
 
 ## Evaluating DynaMix
 
@@ -68,7 +69,7 @@ Pre-trained DynaMix models can be accessed via [Huggingface](https://huggingface
 
 To use a pretrained model, load it via:
 ```python
-from src.utilities.utilities import load_hf_model
+from dynamix.utilities.utilities import load_hf_model
 
 # Load the pre-trained model
 model = load_hf_model("dynamix-3d-alrnn-v1.0")
@@ -88,7 +89,7 @@ Given context data from the target system with shape ($T_C$, $S$, $N$) or ($T_C$
 
 ```python
 import torch
-from src.model.forecaster import DynaMixForecaster
+from dynamix.model.forecaster import DynaMixForecaster
 
 # Create a forecaster with the trained model
 forecaster = DynaMixForecaster(model)
@@ -121,7 +122,7 @@ Optional arguments:
 The package includes visualization functions for different types of systems requiring ground truth ($T$, $N$), context ($T_C$, $N$) and reconstruction ($T$, $N$):
 
 ```python
-from src.utilities.plotting_eval import plot_3D_attractor, plot_2D_attractor, plot_TS_forecast
+from dynamix.utilities.plotting_eval import plot_3D_attractor, plot_2D_attractor, plot_TS_forecast
 
 # For 3D systems
 fig = plot_3D_attractor(ground_truth, context, reconstruction)
@@ -135,14 +136,14 @@ fig = plot_TS_forecast(ground_truth, context, reconstruction, prediction_length)
 
 ### Metrics
 
-To evaluate the performance of the model, several metrics are implemented (see [`metrics`](src/metrics/)):
+To evaluate the performance of the model, several metrics are implemented (see [`metrics`](src/dynamix/metrics/)):
 
 - **Geometrical Misalignment**: Measures how well the model captures the geometry of the attractor
 - **Temporal Misalignment**: Measures how well the model captures the temporal patterns in the data
 - **MASE**: Mean absolute scaled error, measures the accuracy of short-term predictions
 
 ```python
-from src.metrics.metrics import geometrical_misalignment, temporal_misalignment, MASE
+from dynamix.metrics.metrics import geometrical_misalignment, temporal_misalignment, MASE
 
 dstsp = geometrical_misalignment(reconstruction_tensor, ground_truth_tensor, n_bins=30)
 dh = temporal_misalignment(reconstruction_tensor, ground_truth_tensor, smoothing=20)
@@ -160,10 +161,10 @@ DynaMix is trained using backpropagation through time with sparse teacher forcin
 3. This prevents error accumulation while still allowing the model to learn long-term dependencies
 
 ### Training the model
-To train the model, see [`training_setup`](src/training/training_setup.py) script for more details. Appropriate arguments can be parsed via the command line (or via changing the ones from the defaults in the [`settings`](src/training/settings/defaults.json)):
+To train the model, see [`training_setup`](src/dynamix/training/training_setup.py) script for more details. Appropriate arguments can be parsed via the command line (or via changing the ones from the defaults in the [`settings`](src/dynamix/training/settings/defaults.json)):
 
 ```bash
-python -m src.training.training_setup 
+python -m dynamix.training.training_setup 
         --latent_dim 30 --experts 10 --pwl_units 2 \
         --epochs 2000 --batch_size 256 --device cuda
 ```
