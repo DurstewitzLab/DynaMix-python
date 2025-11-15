@@ -32,7 +32,7 @@ Clone the repository and install the package with dependencies:
 ```bash
 git clone https://github.com/DurstewitzLab/DynaMix-python
 cd DynaMix-python
-pip install -e .
+pip install -e .[dev]
 ```
 
 ## DynaMix Model Architecture
