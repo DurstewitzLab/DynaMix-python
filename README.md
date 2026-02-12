@@ -27,11 +27,16 @@ Try DynaMix instantly through our interactive Huggingface Space at [https://hugg
 The project is implemented in Python using PyTorch.
 
 ### Installation
-Clone the repository and install the package with dependencies:
+Clone the repository and navigate into it:
 
 ```bash
 git clone https://github.com/DurstewitzLab/DynaMix-python
 cd DynaMix-python
+```
+
+Install DynaMix in your Python environment:
+
+```bash
 pip install -e .[dev]
 ```
 

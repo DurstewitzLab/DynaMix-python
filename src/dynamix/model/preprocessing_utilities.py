@@ -7,6 +7,7 @@ from statsmodels.tsa.stattools import acf
 from scipy.ndimage import gaussian_filter1d
 from scipy import optimize
 from scipy.optimize import curve_fit
+import sklearn
 
 
 class TimeSeriesProcessor:
@@ -275,28 +276,25 @@ class Embedding:
             raise ValueError(f"Unsupported embedding method: {method}")
 
 
-class BoxCoxTransformer:
+class PowerTransformer:
     """
-    Applies Box-Cox transformation to data for variance stabilization.
+    Applies power transformation to data.
     """
-    def __init__(self, lambda_range=(-2, 2)):
+    def __init__(self):
         """
-        Initialize BoxCoxTransformer.
+        Initialize PowerTransformer.
         
         Args:
             lambda_range: Range for lambda parameter search
         """
-        self.lambda_range = lambda_range
-        self.params = None
+        self.power_transformer = sklearn.preprocessing.PowerTransformer(method='yeo-johnson', standardize=False)
     
-    @staticmethod
-    def transform(data, lambda_range=(-2, 2)):
+    def transform(self, data):
         """
-        Apply Box-Cox transformation to data for stabilization
+        Apply power transformation to data for stabilization
         
         Args:
             data: Input data tensor of shape (seq_length, N)
-            lambda_range: Range for lambda parameter search
             
         Returns:
             Transformed data and parameters for inverse transformation
@@ -304,53 +302,17 @@ class BoxCoxTransformer:
         # Convert to numpy
         data_np, is_torch, device, dtype = TimeSeriesProcessor.to_numpy(data)
         
-        seq_length, n_dims = data_np.shape
-        transformed_data = np.zeros_like(data_np)
-        box_cox_params = []
-        
-        for dim in range(n_dims):
-            # Add constant to ensure positivity
-            if np.min(data_np[:, dim]) <= 0:
-                offset = abs(np.min(data_np[:, dim])) + 1.2
-                data_shifted = data_np[:, dim] + offset
-            else:
-                offset = 1.2
-                data_shifted = data_np[:, dim] + offset
-            
-            try:
-                # Find optimal lambda for Box-Cox transformation
-                transformed, lambda_param = stats.boxcox(data_shifted)
-                
-                # Limit lambda to a reasonable range to prevent numerical issues
-                lambda_param = max(min(lambda_param, 2.0), -2.0)
-                
-                # Recalculate transformation with bounded lambda for consistency
-                if abs(lambda_param) < 1e-8:
-                    # For lambda near zero, use logarithmic transformation
-                    transformed = np.log(data_shifted)
-                else:
-                    transformed = (data_shifted ** lambda_param - 1) / lambda_param
-                
-                # Store transformed data and parameters
-                transformed_data[:, dim] = transformed
-            except:
-                # If transformation fails, just use the original data
-                transformed_data[:, dim] = data_np[:, dim]
-                lambda_param = 1.0  # Identity transform
-                
-            box_cox_params.append((lambda_param, offset))
+        transformed_data = self.power_transformer.fit_transform(data_np)
         
         # Convert back to torch if needed
-        return TimeSeriesProcessor.to_torch(transformed_data, is_torch, device, dtype), box_cox_params
+        return TimeSeriesProcessor.to_torch(transformed_data, is_torch, device, dtype)
     
-    @staticmethod
-    def inverse_transform(data, box_cox_params):
+    def inverse_transform(self, data):
         """
-        Apply inverse Box-Cox transformation
+        Apply inverse power transformation
         
         Args:
             data: Transformed data tensor
-            box_cox_params: Parameters from Box-Cox transformation
             
         Returns:
             Original scale data
@@ -358,30 +320,7 @@ class BoxCoxTransformer:
         # Convert to numpy for computation
         data_np, is_torch, device, dtype = TimeSeriesProcessor.to_numpy(data)
         
-        seq_length, n_dims = data_np.shape
-        inverse_data = np.zeros_like(data_np)
-        
-        for dim in range(min(n_dims, len(box_cox_params))):
-            lambda_param, offset = box_cox_params[dim]
-            
-            # Apply inverse transformation
-            if abs(lambda_param) < 1e-8:
-                # For lambda near zero, the transformation is logarithmic
-                inverse_data[:, dim] = np.exp(data_np[:, dim]) - offset
-            elif abs(lambda_param - 1.0) < 1e-8:
-                # For lambda=1 (identity transform), just subtract offset
-                inverse_data[:, dim] = data_np[:, dim] - offset
-            else:
-                # For other lambda values
-                base = lambda_param * data_np[:, dim] + 1
-                
-                # Simple clipping approach to ensure base is positive
-                # This avoids complex numbers while preserving most data characteristics
-                base = np.maximum(base, 1e-10)
-                
-                # Apply power transformation
-                result = base ** (1/lambda_param)
-                inverse_data[:, dim] = result - offset
+        inverse_data = self.power_transformer.inverse_transform(data_np)
         
         # Convert back to torch if needed
         return TimeSeriesProcessor.to_torch(inverse_data, is_torch, device, dtype)
@@ -448,7 +387,7 @@ class Detrending:
             initial_params = [0.0, 1.0, data_np[0,dim]]
             
             # Bounds for parameters
-            bounds = [(None, None), (0.0, 3.0), (None, None)]
+            bounds = [(None, None), (None, None), (None, None)]
             
             # Optimize
             result = optimize.minimize(
@@ -559,11 +498,11 @@ def pos_embedding(data, model_dim):
 def data_preprocessing(data, model_dim, preprocessing_method="pos_embedding", **kwargs):
     return Embedding.apply_embedding(data, model_dim, preprocessing_method, **kwargs)
 
-def apply_box_cox(data, lambda_range=(-2, 2)):
-    return BoxCoxTransformer.transform(data, lambda_range)
+def apply_power_transform(data):
+    return PowerTransformer.transform(data)
 
-def apply_box_cox_inverse(data, box_cox_params):
-    return BoxCoxTransformer.inverse_transform(data, box_cox_params)
+def apply_power_transform_inverse(data):
+    return PowerTransformer.inverse_transform(data)
 
 def apply_detrending(data):
     return Detrending.apply_detrending(data)

@@ -139,7 +139,7 @@ class DynaMixForecaster:
         Efficient batched forecasting with the DynaMix model.
         
         This method implements a complete forecasting pipeline including:
-        - Data preprocessing (Box-Cox, detrending, standardization)
+        - Data preprocessing (power transformation, detrending, standardization)
         - Embedding techniques for dimensionality matching
         - DynaMix model prediction
         - Data postprocessing (inverse transformations)
@@ -168,7 +168,7 @@ class DynaMixForecaster:
         # Create data preprocessor
         preprocessor = DataPreprocessor(
             standardize=standardize,
-            box_cox=fit_nonstationary,
+            power_transform=fit_nonstationary,
             detrending=fit_nonstationary,
             preprocessing_method=preprocessing_method
         )

@@ -1,32 +1,32 @@
 import torch
 import numpy as np
 from .preprocessing_utilities import (TimeSeriesProcessor, Embedding, 
-                                    BoxCoxTransformer, Detrending, estimate_initial_condition)
+                                    PowerTransformer, Detrending, estimate_initial_condition)
 
 
 class DataPreprocessor:
     """
     Main class for data preprocessing that orchestrates all transformations.
     """
-    def __init__(self, standardize=True, box_cox=False, detrending=False, preprocessing_method="pos_embedding"):
+    def __init__(self, standardize=True, power_transform=False, detrending=False, preprocessing_method="pos_embedding"):
         """
         Initialize the data preprocessor.
         
         Args:
             standardize: Whether to standardize the data
-            box_cox: Whether to apply Box-Cox transformation
+            power_transform: Whether to apply power transformation
             detrending: Whether to apply exponential detrending
             preprocessing_method: Method for embedding ('pos_embedding', 'zero_embedding', 
                                   'delay_embedding', 'delay_embedding_random')
         """
         self.standardize = standardize
-        self.box_cox = box_cox
+        self.power_transform = power_transform
         self.detrending = detrending
         self.preprocessing_method = preprocessing_method
         
         # Parameters for inverse transformations
-        self.box_cox_params_list = None
         self.detrending_params_list = None
+        self.power_transformer = PowerTransformer()
         self.transformation_mean = None
         self.transformation_std = None
 
@@ -40,7 +40,7 @@ class DataPreprocessor:
     
     def _apply_transformations(self, context):
         """
-        Apply Box-Cox transformation and/or detrending to each batch in the context data.
+        Apply power transformation and/or detrending to each batch in the context data.
         
         Args:
             context: Context data tensor of shape (seq_length, batch_size, N_data)
@@ -52,21 +52,19 @@ class DataPreprocessor:
         self.original_context = context.clone()
 
         # Before transformations standardize data
-        if self.box_cox or self.detrending:
+        if self.power_transform or self.detrending:
             self.transformation_mean = torch.mean(context, dim=0)
             self.transformation_std = torch.std(context, dim=0)
             context = (context - self.transformation_mean.unsqueeze(0)) / self.transformation_std.unsqueeze(0)
         
-        # Apply Box-Cox transformation for each batch
-        if self.box_cox:
+        # Apply power transformation for each batch
+        if self.power_transform:
             transformed_context = torch.zeros_like(context)
-            self.box_cox_params_list = []
             
             for b in range(self.batch_size):
                 batch_context = context[:, b, :]
-                transformed, params = BoxCoxTransformer.transform(batch_context)
+                transformed = self.power_transformer.transform(batch_context)
                 transformed_context[:, b, :] = transformed
-                self.box_cox_params_list.append(params)
             
             context = transformed_context
         
@@ -87,7 +85,7 @@ class DataPreprocessor:
     
     def _apply_transformations_inverse(self, output):
         """
-        Apply inverse Box-Cox and detrending transformations.
+        Apply inverse power transformation and detrending transformations.
         
         Args:
             output: Model output of shape (T, batch_size, N)
@@ -103,11 +101,11 @@ class DataPreprocessor:
                 batch_output = Detrending.apply_detrending_inverse(batch_context, batch_output, self.detrending_params_list[b])
                 output[:, b, :] = batch_output
         
-        # Apply inverse Box-Cox transformation for each batch
-        if self.box_cox and self.box_cox_params_list is not None:
+        # Apply inverse power transformation for each batch
+        if self.power_transform:
             for b in range(self.batch_size):
                 batch_output = output[:, b, :]
-                batch_output = BoxCoxTransformer.inverse_transform(batch_output, self.box_cox_params_list[b])
+                batch_output = self.power_transformer.inverse_transform(batch_output)
                 output[:, b, :] = batch_output
 
         # Apply inverse standardization if transformation was applied
@@ -193,17 +191,17 @@ class DataPreprocessor:
             Initial condition for forecasting
             
         Raises:
-            ValueError: If initial condition is provided with Box-Cox or detrending enabled
+            ValueError: If initial condition is provided with power transformation or detrending enabled
         """
         if initial_x is None:
             # Use last context value for each batch
             return context_embedded[-1]
         
-        # Raise error if initial condition is provided with Box-Cox or detrending enabled
-        if (self.box_cox or self.detrending):
+        # Raise error if initial condition is provided with power transformation or detrending enabled
+        if (self.power_transform or self.detrending):
             raise ValueError(
-                "Using initial conditions with Box-Cox or detrending is not supported. "
-                "Either disable Box-Cox and detrending or do not provide an initial condition."
+                "Using initial conditions with power transformation or detrending is not supported. "
+                "Either disable power transformation and detrending or do not provide an initial condition."
             )
         
         # Process initial conditions for each batch
@@ -243,7 +241,7 @@ class DataPreprocessor:
         self.batch_size = context.shape[1]
         self.feature_dim = context.shape[2]
         
-        # Apply transformations (Box-Cox, detrending)
+        # Apply transformations (power transformation, detrending)
         context = self._apply_transformations(context)
         
         # Standardize data
@@ -270,7 +268,7 @@ class DataPreprocessor:
         # Undo standardization
         output = self._unstandardize_data(output)
         
-        # Apply inverse transformations (Box-Cox, detrending)
+        # Apply inverse transformations (power transformation, detrending)
         output = self._apply_transformations_inverse(output)
                 
         return output

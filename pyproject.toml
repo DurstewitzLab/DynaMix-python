@@ -1,5 +1,5 @@
 [project]
-name = "DynaMix-python"
+name = "dynamix"
 version = "0.1.0"
 description = "True Zero-Shot Inference of Dynamical Systems Preserving Long-Term Statistics"
 readme = "README.md"
