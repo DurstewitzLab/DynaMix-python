@@ -190,7 +190,7 @@ During training, the model is saved every `ssi` (scalar_saving_interval) epochs.
 If you use DynaMix in your research, please cite our paper:
 
 ```
-@inproceedings{NEURIPS2025_1419d855,
+@inproceedings{hemmer_true_2025,
  author = {Hemmer, Christoph J\"{u}rgen and Durstewitz, Daniel},
  booktitle = {Advances in Neural Information Processing Systems},
  editor = {D. Belgrave and C. Zhang and H. Lin and R. Pascanu and P. Koniusz and M. Ghassemi and N. Chen},
@@ -202,4 +202,3 @@ If you use DynaMix in your research, please cite our paper:
  year = {2025}
 }
 ```
-
