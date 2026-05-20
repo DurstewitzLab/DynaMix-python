@@ -83,6 +83,9 @@ def train_dynamix(model, dataset, optimizer, scheduler, args, printing=True, plo
     mase_values = []
     ssi_epochs = []
     epoch_times = []  # Track epoch times
+    chk_snapshot = copy.deepcopy(model.state_dict())
+    chk_optimizer_state = copy.deepcopy(optimizer.state_dict())
+    chk_loss = 10.0
     
     epochs = range(num_epochs)
 
@@ -103,6 +106,12 @@ def train_dynamix(model, dataset, optimizer, scheduler, args, printing=True, plo
                 y, 
                 lambda_reg=lambda_reg
             )
+
+            # Check for nan or infinite loss; reload chk_snapshot if divergence occurs
+            if not torch.isfinite(loss):
+                model.load_state_dict(copy.deepcopy(chk_snapshot))
+                optimizer.load_state_dict(copy.deepcopy(chk_optimizer_state))
+                continue
             
             loss.backward()  # Backward pass
             
@@ -117,8 +126,12 @@ def train_dynamix(model, dataset, optimizer, scheduler, args, printing=True, plo
         # Calculate epoch duration
         epoch_duration = time.time() - epoch_start_time
         
-        # Compute and store average loss for the epoch
+        # Compute and store average loss, checkpoint
         average_epoch_loss = sum(epoch_losses) / len(epoch_losses)
+        if average_epoch_loss < chk_loss:
+            chk_loss = average_epoch_loss
+            chk_snapshot = copy.deepcopy(model.state_dict())
+            chk_optimizer_state = copy.deepcopy(optimizer.state_dict())
         losses.append(average_epoch_loss)
 
         # Calculate and print metrics at SSI intervals, save model checkpoints

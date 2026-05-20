@@ -7,13 +7,17 @@ class GatingNetwork(nn.Module):
     def __init__(self, N, M, Experts, dtype=torch.float32):
         super().__init__()
         self.conv = nn.Conv1d(N, N, kernel_size=2, padding=0, bias=True, dtype=dtype)
+        nn.init.xavier_uniform_(self.conv.weight)
+        nn.init.zeros_(self.conv.bias)
         self.softmax_temp1 = nn.Parameter(torch.tensor([0.1], dtype=dtype))
         self.D = nn.Parameter(torch.zeros(N, M, dtype=dtype))
         self.D.data[:, :N] = torch.eye(N, dtype=dtype)
         self.mlp_layer1 = nn.Linear(M + N, Experts, dtype=dtype)
         self.mlp_layer1.bias = nn.Parameter(torch.zeros(Experts, dtype=dtype), requires_grad=False)
+        self.mlp_layer1.weight = nn.Parameter(self.gaussian_init(Experts, M + N, dtype=dtype))
         self.mlp_layer2 = nn.Linear(Experts, Experts, dtype=dtype)
         self.mlp_layer2.bias = nn.Parameter(torch.zeros(Experts, dtype=dtype), requires_grad=False)
+        self.mlp_layer2.weight = nn.Parameter(self.gaussian_init(Experts, Experts, dtype=dtype))
         self.softmax_temp2 = nn.Parameter(torch.tensor([0.1], dtype=dtype))
         self.sigma = nn.Parameter(torch.ones(N, dtype=dtype) * 0.05, requires_grad=True)
 

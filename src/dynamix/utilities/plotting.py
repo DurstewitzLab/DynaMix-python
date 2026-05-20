@@ -211,6 +211,7 @@ def plot_metrics(metrics_data, save_dir=None, name_prefix="", show=False):
             plt.ylabel(name, fontsize=16)
             if i == len(metrics_to_plot) - 1:
                 plt.xlabel('Epoch', fontsize=16)
+                plt.yscale('log')
             plt.grid(True, alpha=0.3)
             plt.tick_params(axis='both', which='major', labelsize=12)
         

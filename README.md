@@ -169,10 +169,18 @@ DynaMix is trained using backpropagation through time with sparse teacher forcin
 To train the model, see [`training_setup`](src/dynamix/training/training_setup.py) script for more details. Appropriate arguments can be parsed via the command line (or via changing the ones from the defaults in the [`settings`](src/dynamix/training/settings/defaults.json)):
 
 ```bash
-python -m dynamix.training.training_setup 
-        --latent_dim 30 --experts 10 --pwl_units 2 \
-        --epochs 2000 --batch_size 256 --device cuda
+python -m dynamix.training.training_setup
 ```
+
+### Data Generation
+
+To generate training data, see [`generate_data`](src/dynamix/utilities/generate_data.py). Run:
+
+```bash
+python -m dynamix.utilities.generate_data
+```
+
+This produces training data and context ready for use in the DynaMix training pipeline.
 
 ### Model Saving
 During training, the model is saved every `ssi` (scalar_saving_interval) epochs. The saved model state dictionary can be found in the specified `save_path` directory under the "checkpoints" subfolder. Additionally, training metrics are saved separately in a metrics.pt file.
@@ -182,14 +190,16 @@ During training, the model is saved every `ssi` (scalar_saving_interval) epochs.
 If you use DynaMix in your research, please cite our paper:
 
 ```
-@misc{hemmer2025truezeroshotinferencedynamical,
-      title={True Zero-Shot Inference of Dynamical Systems Preserving Long-Term Statistics}, 
-      author={Christoph Jürgen Hemmer and Daniel Durstewitz},
-      year={2025},
-      eprint={2505.13192},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2505.13192}, 
+@inproceedings{NEURIPS2025_1419d855,
+ author = {Hemmer, Christoph J\"{u}rgen and Durstewitz, Daniel},
+ booktitle = {Advances in Neural Information Processing Systems},
+ editor = {D. Belgrave and C. Zhang and H. Lin and R. Pascanu and P. Koniusz and M. Ghassemi and N. Chen},
+ pages = {13497--13540},
+ publisher = {Curran Associates, Inc.},
+ title = {True Zero-Shot Inference of Dynamical Systems Preserving Long-Term Statistics},
+ url = {https://proceedings.neurips.cc/paper_files/paper/2025/file/1419d8554191a65ea4f2d8e1057973e4-Paper-Conference.pdf},
+ volume = {38},
+ year = {2025}
 }
 ```
 

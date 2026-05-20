@@ -12,12 +12,12 @@
         "epochs": 2000,
         "alpha": 1.0,
         "n_interleave": 10,
-        "start_learning_rate": 4e-3,
-        "end_learning_rate": 1e-5,
+        "start_learning_rate": 5e-3,
+        "end_learning_rate": 1e-4,
         "batches_per_epoch": 50,
         "scalar_saving_interval": 25,
         "noise_level": 0.05,
-        "regularization_strength": 0.1
+        "regularization_strength": 0.2
     },
     "metrics": {
         "state_space_divergence": {

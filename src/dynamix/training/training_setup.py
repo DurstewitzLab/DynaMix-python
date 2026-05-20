@@ -180,6 +180,10 @@ def training_setup():
     else:
         raise ValueError(f"Unknown expert type: {args.expert_type}")
     print_model_parameters(model)
+
+    if hasattr(torch, "compile"):
+        model = torch.compile(model, mode="max-autotune", backend="inductor")
+        print("Model compiled with torch.compile")
     
     # Define optimizer and scheduler
     optimizer = torch.optim.RAdam(model.parameters(), lr=args.start_lr)

@@ -128,7 +128,10 @@ def load_model(model_path, model, device='cpu'):
     else:
         # Fallback to PyTorch loading for backward compatibility
         state_dict = torch.load(model_path, map_location=device)
-    
+
+    if any(k.startswith("_orig_mod.") for k in state_dict):
+        state_dict = {k.removeprefix("_orig_mod."): v for k, v in state_dict.items()}
+
     model.load_state_dict(state_dict)
     model.to(device)
     
